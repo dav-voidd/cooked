@@ -18,6 +18,15 @@
 
 Built on the two study methods with the strongest research behind them: **practice testing** and **spaced practice** (Dunlosky et al., 2013), combined as *successive relearning*.
 
+## ⬇️ Download
+
+Get both from **[Releases → latest](../../releases/latest)**:
+
+| Platform | File | Install |
+|---|---|---|
+| 🪟 Windows | **Cooked.exe** | Double-click. If SmartScreen shows, click *More info → Run anyway*. |
+| 📱 Android | **Cooked.apk** | Open on your phone, allow "Install unknown apps" if asked. |
+
 ## 📱 Android app
 
 1. Go to **[Releases](../../releases/latest)** and download **Cooked.apk** on your phone.
@@ -27,7 +36,7 @@ Built on the two study methods with the strongest research behind them: **practi
 Everything runs on your phone. Your key and progress never leave it (only the module you scan is sent to Gemini).
 Studying works offline. Scanning, essay grading and synonym checks need internet.
 
-The APK is built automatically by GitHub Actions on every push (`.github/workflows/android.yml`).
+Cooked.exe and Cooked.apk are built automatically by GitHub Actions on every push (`.github/workflows/android.yml`).
 
 ## 💻 Desktop app (Windows)
 

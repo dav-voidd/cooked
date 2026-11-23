@@ -6,7 +6,8 @@ from urllib.parse import urlparse, parse_qs
 import engine, gemini, claude_cli
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-STATIC = os.path.join(ROOT, "static")
+FROZEN = getattr(sys, "frozen", False)
+STATIC = os.path.join(getattr(sys, "_MEIPASS", ROOT), "static")
 LAST_PING = [time.time()]
 MAX_UPLOAD = 200 * 1024 * 1024
 
@@ -249,6 +250,8 @@ def get_webview():
         import webview
         return webview
     except ImportError:
+        if FROZEN:
+            return None
         print("First run: installing the desktop window component (pywebview)... one moment.")
         try:
             subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "pywebview"])
@@ -435,7 +438,8 @@ def set_app_id():
 def main():
     set_app_id()
     engine.db()
-    make_shortcuts()
+    if not FROZEN:
+        make_shortcuts()
     engine.start_scanner()
     port = free_port()
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)

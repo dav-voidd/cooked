@@ -5,8 +5,12 @@ from datetime import date, datetime, timedelta
 import gemini, claude_cli
 from extract import extract, ExtractError
 
+import sys
 ROOT = os.path.dirname(os.path.abspath(__file__))
-DATA = os.path.join(ROOT, "data")
+if getattr(sys, "frozen", False):   # Cooked.exe build: keep study data in %LOCALAPPDATA%\Cooked
+    DATA = os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "Cooked", "data")
+else:
+    DATA = os.path.join(ROOT, "data")
 DB_PATH = os.path.join(DATA, "db.json")
 LOCK = threading.RLock()
 

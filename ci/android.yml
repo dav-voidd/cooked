@@ -1,9 +1,9 @@
-name: Build Android APK
+name: Build Cooked (Windows + Android)
 
 on:
   push:
     branches: [main]
-    paths: ["mobile/**", ".github/workflows/android.yml"]
+    paths: ["mobile/**", "desktop/**", ".github/workflows/android.yml"]
   workflow_dispatch:
 
 permissions:
@@ -27,7 +27,10 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: android-actions/setup-android@v3
+      - name: Android SDK (preinstalled on runner)
+        run: |
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null || true
 
       - name: Install
         run: npm install
@@ -56,13 +59,49 @@ jobs:
           name: Cooked-apk
           path: mobile/Cooked.apk
 
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build Cooked.exe
+        run: |
+          pip install pyinstaller pywebview
+          pyinstaller --noconfirm --onefile --windowed --name Cooked --icon static/cooked.ico --add-data "static;static" --collect-all webview app.py
+          Copy-Item dist/Cooked.exe ../Cooked.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Cooked-exe
+          path: Cooked.exe
+
+  release:
+    needs: [apk, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: Cooked for Android (build ${{ github.run_number }})
+          name: Cooked (build ${{ github.run_number }})
           body: |
-            Download **Cooked.apk** below and open it on your Android phone to install.
-            (You may need to allow "Install unknown apps" for your browser or file manager.)
-          files: mobile/Cooked.apk
+            ## Download
+            - **Windows:** `Cooked.exe` — double-click to run. If SmartScreen appears, click *More info → Run anyway*.
+            - **Android:** `Cooked.apk` — open it on your phone to install (allow "Install unknown apps" if asked).
+
+            Paste your free Gemini API key in **Settings** on first launch. Your study data stays on your device.
+          files: |
+            Cooked.exe
+            Cooked.apk
           make_latest: true
