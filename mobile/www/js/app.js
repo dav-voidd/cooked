@@ -23,7 +23,7 @@ function renderChips(p) {
     <div class="chip ${p.studied_today ? "hot" : "cold"}" title="Daily streak${p.studied_today ? "" : " (study today to keep it!)"}">🔥 ${p.day_streak}</div>
     <div class="chip ${p.combo >= 5 ? "hot" : ""}" title="Current combo (best ${p.best_combo})">⚡ x${p.combo}</div>
     <div class="chip lvl" title="${p.into}/${p.need} XP to next level">
-      <span>Lv ${p.level} · ${esc(p.rank)}</span><div class="bar"><i style="width:${Math.round(100 * p.into / p.need)}%"></i></div>
+      <span>Lv ${p.level}<span class="rk"> · ${esc(p.rank)}</span></span><div class="bar"><i style="width:${Math.round(100 * p.into / p.need)}%"></i></div>
     </div>`;
 }
 async function refreshState() { STATE = await api("state"); renderChips(STATE.profile); return STATE; }

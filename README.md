@@ -1,64 +1,136 @@
-<p align="center"><img src="mobile/assets/icon-only.png" width="120" alt="Cooked logo"></p>
+<div align="center">
 
-<h1 align="center">Cooked.</h1>
-<p align="center"><b>Active recall that gets you exam-ready.</b><br>Upload your modules → AI turns them into quizzes → you can't move on until you've mastered them.</p>
+<img src="docs/banner.png" alt="Cooked" width="100%">
+
+# Cooked.
+
+### Active recall that gets you exam-ready.
+
+**Upload your modules → AI reads every page and diagram → it quizzes you until you actually know it → 95% on the Mastery Exam or the next module stays locked.**
+Free. No ads. Your notes and progress stay on your device.
+
+[![Release](https://img.shields.io/github/v/release/dav-voidd/cooked?color=FF5A1F&label=release&style=for-the-badge)](https://github.com/dav-voidd/cooked/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/dav-voidd/cooked/total?color=FF5A1F&style=for-the-badge)](https://github.com/dav-voidd/cooked/releases)
+[![Build](https://img.shields.io/github/actions/workflow/status/dav-voidd/cooked/android.yml?label=build&style=for-the-badge)](https://github.com/dav-voidd/cooked/actions)
+
+![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&logoColor=white)
+![Android](https://img.shields.io/badge/Android-6+-3DDC84?logo=android&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
+![Gemini](https://img.shields.io/badge/AI-Gemini-8E75B2?logo=googlegemini&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-FF5A1F)
+
+### [⬇️ Download for Windows & Android](https://github.com/dav-voidd/cooked/releases/latest)
+
+</div>
 
 ---
 
-## What it does
+## ✨ What it does
 
-- **Scans your modules:** PDF, PPTX, DOCX, images or text. AI reads every page *and diagram* and writes a reviewer plus a question bank.
-- **6 question types:** multiple choice, true/false, identification, fill in the blank, enumeration, essay (AI-graded).
-- **Mastery gating:** modules unlock one by one. Each question needs 3 correct answers in a row (spaced out), then a **Mastery Exam at 95%+** unlocks the next module.
-- **🔑 Key points mode:** learn just the main term and idea of each topic, or pick exactly what your prof covered with **🎯 Scope**.
-- **📅 Exam countdown:** set your exam date. A forgetting-curve model predicts how much you'll remember on exam day and times your reviews so it peaks then.
-- **⚡ Boost:** your 15 weakest questions, repeated until they stick.
-- **Rewards:** XP, combos, levels (Raw → Legendary Chef), daily streaks, 15 badges.
-- **Resume anywhere:** switch tabs or close the app and pick up on the same question.
+| | |
+|---|---|
+| 📄 **Scans your modules** | PDF, PPTX, DOCX, images or text. AI reads every page *and diagram* and writes a reviewer + question bank |
+| 🧠 **6 question types** | Multiple choice, true/false, identification, fill in the blank, enumeration, essay (AI-graded) |
+| 🔒 **Mastery gating** | Modules unlock one by one: 3 correct in a row per question, then a **Mastery Exam at 95%+** |
+| 🔑 **Key points mode** | Learn just the main term and idea of each topic, or pick exactly what your prof covered with **🎯 Scope** |
+| 📅 **Exam countdown** | A forgetting-curve model predicts your recall on exam day and times reviews to peak then |
+| ⚡ **Boost** | Drills your 15 weakest questions until they stick |
+| 🏆 **Rewards** | XP, combos, ranks (Raw → Legendary Chef), daily streaks, 15 badges |
+| ⏸️ **Resume anywhere** | Switch tabs or close the app and pick up on the same question |
+| ✈️ **Works offline** | Scan once, study anywhere. Only scanning and essay grading need internet |
 
 Built on the two study methods with the strongest research behind them: **practice testing** and **spaced practice** (Dunlosky et al., 2013), combined as *successive relearning*.
 
-## ⬇️ Download
+## 🖼️ Preview
 
-Get both from **[Releases → latest](../../releases/latest)**:
+<div align="center">
 
-| Platform | File | Install |
+**💻 Windows**
+
+<img src="docs/desktop-deck.png" width="100%" alt="Subject page with exam forecast">
+
+<img src="docs/desktop-fb.png" width="49%" alt="Quiz with instant feedback"> <img src="docs/desktop-rewards.png" width="49%" alt="Rewards and badges">
+
+**📱 Android**
+
+<img src="docs/android.png" width="100%" alt="Cooked on Android">
+
+</div>
+
+## 🚀 Quick start
+
+| Platform | Download | Install |
 |---|---|---|
-| 🪟 Windows | **Cooked.exe** | Double-click. If SmartScreen shows, click *More info → Run anyway*. |
-| 📱 Android | **Cooked.apk** | Open on your phone, allow "Install unknown apps" if asked. |
+| 🪟 Windows | **[Cooked.exe](https://github.com/dav-voidd/cooked/releases/latest)** | Double-click. If Windows says *"protected your PC"*: **More info → Run anyway** |
+| 📱 Android | **[Cooked.apk](https://github.com/dav-voidd/cooked/releases/latest)** | Open it on your phone. Allow *"Install unknown apps"* if asked |
 
-## 📱 Android app
+Then:
+1. 🔑 **Settings** → paste a free Gemini key from [AI Studio](https://aistudio.google.com/apikey) (no card needed).
+2. ➕ **New subject** → upload your modules in order.
+3. 🔥 Hit **Start** and get cooked.
 
-1. Go to **[Releases](../../releases/latest)** and download **Cooked.apk** on your phone.
-2. Open it and allow "Install unknown apps" if Android asks.
-3. In the app: **⚙️ Settings** → paste a free Gemini key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
-
-Everything runs on your phone. Your key and progress never leave it (only the module you scan is sent to Gemini).
-Studying works offline. Scanning, essay grading and synonym checks need internet.
-
-Cooked.exe and Cooked.apk are built automatically by GitHub Actions on every push (`.github/workflows/android.yml`).
-
-## 💻 Desktop app (Windows)
-
-Requires Python 3.10+.
-
+**Run from code:**
 ```bash
-cd desktop
-python app.py
+git clone https://github.com/dav-voidd/cooked.git
+cd cooked/desktop
+python app.py        # no extra installs needed
 ```
 
-It opens in its own window and puts a **Cooked** shortcut on your Desktop. On the desktop you can scan with:
-- **Gemini** (free key), or
-- **Claude Pro** through Claude Code (Settings → Claude Pro → Connect).
+## ❓ FAQ
 
-**Send a subject to your phone:** desktop → open the subject → **📤 Export** → on the phone, subject → **⬇️ Import**.
+<details>
+<summary>Is it free?</summary>
 
-## Project layout
+Yes. No ads, no account. The Gemini key is free too.
+</details>
+
+<details>
+<summary>Can I use my Claude Pro instead of Gemini?</summary>
+
+On the Windows app, yes: **Settings → Claude Pro → Connect** (needs Claude Code installed and signed in).
+</details>
+
+<details>
+<summary>Can I study on my phone what I scanned on my PC?</summary>
+
+Yes. On PC open the subject → **📤 Export**. On the phone open the subject → **⬇️ Import**.
+</details>
+
+<details>
+<summary>Why 95%?</summary>
+
+So you can't pass by luck. 94% or lower is a fail. Missed questions come back until you know them.
+</details>
+
+<details>
+<summary>Where is my data?</summary>
+
+Only on your device. On Windows it's in `%LOCALAPPDATA%\Cooked`. Only the module you scan is sent to the AI.
+</details>
+
+## 🧱 Built with
+
+Python (stdlib) · [pywebview](https://pywebview.flowrl.com) · [Capacitor](https://capacitorjs.com) · [pdf.js](https://mozilla.github.io/pdf.js/) · [JSZip](https://stuk.github.io/jszip/) · [Gemini API](https://ai.google.dev)
+
+<details>
+<summary>📁 Project structure</summary>
 
 ```
-desktop/   Python app (stdlib only) + web UI, Gemini / Claude Code scanning
-mobile/    Android app (Capacitor): the same UI with an on-device engine (www/js/engine.js)
+desktop/                 Windows app (Python stdlib + web UI)
+├── app.py               window, local server, shortcuts
+├── engine.py            grading, mastery gating, forgetting-curve scheduler, rewards
+├── gemini.py · claude_cli.py · extract.py
+└── static/              UI (index.html, app.js, style.css)
+mobile/                  Android app (Capacitor)
+└── www/js/engine.js     the same engine, running on the phone
+.github/workflows/       builds Cooked.exe + Cooked.apk on every push
 ```
+</details>
 
 ---
-<p align="center">built by <b>dav</b></p>
+
+<div align="center">
+
+Made with 🔥 by [dav](https://github.com/dav-voidd) · [MIT License](LICENSE)
+
+</div>
