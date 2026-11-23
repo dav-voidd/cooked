@@ -45,7 +45,7 @@ function handOff(u) {
   sessionStorage.removeItem("cooked-to");
   auth.signOut();
   if (to === "cooked://auth") {
-    const intent = `intent://auth?${p}#Intent;scheme=cooked;package=com.davvoidd.cooked;end`;
+    const intent = `intent://auth?${p}#Intent;scheme=cooked;package=com.davvoid.cooked;end`;
     $("#box").innerHTML = `<h1>Cooked.</h1><p>Signed in as <b>${(u.email || "").replace(/</g, "&lt;")}</b>.</p><a class="btn fire" href="${intent}">Open Cooked</a>
       <p class="small">If the app didn't open by itself, tap the button.</p>`;
     location.href = intent;
