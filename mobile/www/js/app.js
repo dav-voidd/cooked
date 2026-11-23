@@ -588,13 +588,35 @@ async function badgesPage() {
 }
 
 /* ---------------- settings (mobile) ---------------- */
+function syncCard(sv) {
+  if (!sv || !sv.configured) return "";
+  const when = sv.at ? new Date(sv.at * 1000).toLocaleString([], {dateStyle: "medium", timeStyle: "short"}) : "not yet";
+  return `<div class="card" style="margin-bottom:14px"><div class="row between"><h3 style="font-size:20px">☁️ Sync with your PC</h3>
+      ${sv.signed_in ? `<span class="tag ok">signed in</span>` : `<span class="tag">off</span>`}</div>
+    ${sv.signed_in
+      ? `<p class="muted small" style="margin:8px 0 12px">Signed in as <b>${esc(sv.email)}</b>. Subjects, progress, XP and your Gemini key sync automatically.<br>Last sync: ${esc(when)}${sv.error ? ` · <span style="color:var(--bad)">${esc(sv.error)}</span>` : ""}</p>
+         <div class="row"><button class="btn fire" id="syncNow">${sv.busy ? `<span class="spin"></span> Syncing` : "🔄 Sync now"}</button><button class="btn ghost" id="syncOut">Sign out</button></div>`
+      : `<p class="muted small" style="margin:8px 0 12px">Sign in with the same Google account as on your PC to get your subjects, progress and Gemini key here.</p>
+         <button class="btn fire" id="syncIn" style="width:100%">Sign in with Google</button>`}</div>`;
+}
+function wireSync(again) {
+  if ($("#syncIn")) $("#syncIn").onclick = async () => { try { await api("sync/login", {}); } catch (e) { fail(e); } };
+  if ($("#syncNow")) $("#syncNow").onclick = async () => { const b = $("#syncNow"); b.innerHTML = `<span class="spin"></span> Syncing`;
+    try { const r = await api("sync", {}); r.error ? toast("⚠️ " + esc(r.error), "err", 6500) : toast("☁️ Synced ✓"); again(); } catch (e) { fail(e); } };
+  if ($("#syncOut")) $("#syncOut").onclick = async () => { await api("sync/logout", {}); toast("Signed out. Your data stays on this phone."); again(); };
+}
+window.addEventListener("cooked-login", e => { toast(`☁️ Signed in as ${esc(e.detail || "")}. Syncing...`, "gold"); if (location.hash === "#/settings") settingsPage(); });
+window.addEventListener("cooked-synced", () => { const h = location.hash; if (h === "" || h === "#/" || h.startsWith("#/deck/") || h === "#/settings" || h === "#/badges") route(); });
+
 async function settingsPage() {
   const s = await refreshState(), st = s.settings;
   view.innerHTML = `<h1 style="font-size:32px;margin-bottom:14px">Settings</h1>
+  ${syncCard(s.sync)}
   <div class="card">
     <div class="row between"><h3 style="font-size:20px">🔷 Gemini (free)</h3>${st.has_key ? `<span class="tag ok">key saved ${esc(st.key_hint)}</span>` : `<span class="tag critical">no key</span>`}</div>
-    <p class="muted small">Get a free key at <b>aistudio.google.com/apikey</b> → "Create API key", then paste it here. It stays on this phone.</p>
-    <input id="key" type="password" autocomplete="off" placeholder="${st.has_key ? "Paste a new key to replace" : "Paste your key here"}">
+    <p class="muted small">Get a free key at <b>aistudio.google.com/apikey</b> → "Create API key", then paste it here. It stays on your devices.</p>
+    <div class="row" style="gap:8px;flex-wrap:nowrap"><input id="key" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="flex:1" placeholder="${st.has_key ? "Paste a new key to replace" : "Paste your key here"}">
+    <button class="btn" id="eye" type="button" title="Show key">👁</button></div>
     <div style="margin-top:12px"><b class="small">Scan speed</b>
       <select id="gspeed" style="margin-top:6px">
         <option value="balanced" ${st.gemini_speed !== "fast" ? "selected" : ""}>⚖️ Balanced (Flash): better questions</option>
@@ -614,6 +636,8 @@ async function settingsPage() {
   <div class="card" style="margin-top:14px"><b>Scanned on your PC with Claude Pro?</b>
     <p class="muted small">On the desktop app open the subject → <b>📤 Export</b>, send the file to your phone, then here: subject → <b>⬇️ Import</b>. No scanning needed.</p></div>
   <p class="dim small" style="text-align:center;margin-top:18px">Cooked mobile · built by dav</p>`;
+  wireSync(settingsPage);
+  $("#eye").onclick = () => { const k = $("#key"); k.type = k.type === "password" ? "text" : "password"; };
   $("#gspeed").onchange = async () => { await api("settings", {gemini_speed: $("#gspeed").value}); toast("Saved ✓"); };
   $("#strict").onchange = async () => { await api("settings", {strict: $("#strict").value}); toast("Saved ✓"); };
   $("#judge").onchange = () => api("settings", {ai_judge: $("#judge").checked});

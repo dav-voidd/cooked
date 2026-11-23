@@ -103,7 +103,9 @@ async function generateJSON(parts, schema, system, temperature = .4, log, timeou
         catch { last = new GemErr("Gemini returned invalid JSON" + (c.finishReason === "MAX_TOKENS" ? " (cut off)" : ""), -1); continue; }
       } catch (e) {
         if (!(e instanceof GemErr)) throw e; last = e; const code = e.code; const msg = (e.message + JSON.stringify(e.details)).toLowerCase();
-        if (code === 401 || code === 403 || (code === 400 && msg.includes("api key"))) throw new GemErr("Invalid Gemini API key. Open Settings and paste a valid key.", code);
+        if (code === 401 || code === 403 || (code === 400 && msg.includes("api key"))) {
+          const k = DB.settings.api_key || "", why = (e.message.split(": ").slice(1).join(": ") || e.message).slice(0, 160);
+          throw new GemErr(`Google rejected the key ending "…${k.slice(-4)}" (${k.length} characters): ${why}. A full key starts with "AIza" and is 39 characters. On AI Studio tap your key, then "Copy key" (the shortened text in the list won't work).`, code); }
         if (code === 400 && think && msg.includes("think")) { GC.noThink.add(model); think = null; continue; }
         if (code === 400 || code === 404) break;
         if (code === 429) { const dead = msg.includes("limit: 0") || msg.includes("perday") || msg.includes("per day");
@@ -552,12 +554,16 @@ const sessionsView = () => Object.values(S()).filter(s => !s.done && s.queue.len
 async function handle(method, path, body) {
   const parts = path.replace(/^\/?api\//, "").split("/").filter(Boolean);
   const P = (...x) => parts.length === x.length && x.every((v, i) => v === "*" || v === parts[i]);
+  if (parts[0] === "sync") return window.CookedSync.route(method, parts, body);
   if (P("ping")) return {ok: true};
   if (method === "GET" && P("state")) return {decks: Object.keys(DB.decks).sort((a, b) => DB.decks[a].created - DB.decks[b].created).map(deckView), profile: profileView(),
     settings: {has_key: !!DB.settings.api_key, key_hint: DB.settings.api_key ? "..." + DB.settings.api_key.slice(-4) : "", model: DB.settings.model, ai_judge: DB.settings.ai_judge,
-      provider: "gemini", strict: DB.settings.strict, gemini_speed: DB.settings.gemini_speed, mobile: true}, due_total: dueReviews().length, active: sessionsView()};
+      provider: "gemini", strict: DB.settings.strict, gemini_speed: DB.settings.gemini_speed, mobile: true}, due_total: dueReviews().length, active: sessionsView(), sync: window.CookedSync?.view()};
   if (method === "POST" && P("settings")) {
-    if (body.api_key && body.api_key.trim()) DB.settings.api_key = body.api_key.trim();
+    if (body.api_key && body.api_key.trim()) {
+      const k = body.api_key.replace(/\s+/g, "").replace(/^["']|["']$/g, "").replace(/^.*key=/, "");
+      if (k.length < 30 || /[.…*]/.test(k)) throw new HttpErr(`That's only part of a key (${k.length} characters). On aistudio.google.com/apikey tap your key, then "Copy key", and paste the whole thing (starts with "AIza", 39 characters).`, 400);
+      DB.settings.api_key = k; GC.names = null; GC.good = null; GC.bad = {}; }
     for (const k of ["model", "ai_judge", "strict", "gemini_speed"]) if (k in body) DB.settings[k] = body[k];
     for (const m of Object.values(DB.modules)) if (m.status === "error" && /API key/.test(m.error)) { m.status = "queued"; m.error = ""; queueScan(m.id); }
     save(true); return {ok: true};
@@ -587,6 +593,7 @@ async function handle(method, path, body) {
       return {title: m.title, notes: m.notes, kind: m.kind, in_scope: [...scopeInfo(m)[0]], summary: moduleSummary(m)}; }
     if (act === "scope") { if (method === "POST") setScope(mid, body.depth, body.topics, body.detail); return scopeView(mid); }
     if (act === "rescan") { if (m.mastered) throw new HttpErr("Already mastered.", 403); if (m.imported) throw new HttpErr("Imported modules can't be rescanned.", 403);
+      if (m._nosrc) throw new HttpErr("This module was scanned on your other device. Rescan it there.", 403);
       await fdelPrefix(mid + "/media/"); Object.assign(m, {status: "queued", error: "", progress: "Waiting in line...", questions: [], progress_q: {}, notes: null}); save(); queueScan(mid); return {ok: true}; }
     if (method === "DELETE" && parts.length === 2) { const d = DB.decks[m.deck_id]; d.order = d.order.filter(x => x !== mid); delete DB.modules[mid]; fdelPrefix(mid + "/"); save(true); return {ok: true}; }
     if (act === "start") return startSession(mid, body.mode || "learn");
@@ -605,5 +612,5 @@ async function assetURL(mid, name) { const b = await fget(name === "source" ? `$
 load();
 for (const m of Object.values(DB.modules)) if (m.status === "queued" || m.status === "scanning") { m.status = "queued"; SCANQ.push(m.id); }
 setTimeout(runScans, 500);
-window.LocalAPI = {handle, assetURL, _db: () => DB};
+window.LocalAPI = {handle, assetURL, _db: () => DB, _x: {db: () => DB, save, fget, fput, fdelPrefix, HttpErr, IMG_MIME}};
 })();

@@ -3,7 +3,7 @@ import base64, json, mimetypes, os, re, shutil, socket, subprocess, sys, threadi
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
-import engine, gemini, claude_cli
+import engine, gemini, claude_cli, sync
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 FROZEN = getattr(sys, "frozen", False)
@@ -74,6 +74,19 @@ class H(BaseHTTPRequestHandler):
 
     def _route(self, method, p, u):
         d = engine.db()
+        if method == "GET" and p == "/auth":
+            q = {k: v[0] for k, v in parse_qs(u.query).items()}
+            try:
+                sync.finish_login(q)
+                msg = f"Signed in as {q.get('email', '')}. Cooked is syncing now. You can close this tab."
+            except Exception as e:
+                msg = str(e)
+            body = ("<!doctype html><meta charset=utf-8><title>Cooked</title><body style='background:#110d0b;color:#f6ede6;"
+                    "font:18px system-ui;display:grid;place-items:center;height:90vh;text-align:center'><div><h1 style='color:#ff7a1a'>"
+                    f"Cooked.</h1><p>{msg.replace('<', '&lt;')}</p></div>").encode()
+            self.send_response(200); self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+            return
         if not p.startswith("/api/"):
             f = os.path.normpath(os.path.join(STATIC, p.lstrip("/") or "index.html"))
             if not f.startswith(STATIC):
@@ -92,7 +105,7 @@ class H(BaseHTTPRequestHandler):
                                          "claude_model": s.get("claude_model", "sonnet"), "strict": s.get("strict", "normal"),
                                          "gemini_speed": s.get("gemini_speed", "balanced"),
                                          "key_hint": ("..." + engine.api_key()[-4:]) if engine.api_key() else ""},
-                            "due_total": len(engine.due_reviews()), "active": engine.sessions_view()})
+                            "due_total": len(engine.due_reviews()), "active": engine.sessions_view(), "sync": sync.view()})
         if method == "POST" and parts == ["settings"]:
             b = self.body()
             if "api_key" in b and b["api_key"].strip():
@@ -107,6 +120,20 @@ class H(BaseHTTPRequestHandler):
                     m["status"], m["error"] = "queued", ""
                     engine.SCAN_Q.put(m["id"])
             return j(self, {"ok": True})
+        if parts and parts[0] == "sync":
+            if method == "GET" and parts == ["sync"]:
+                return j(self, sync.view())
+            if method == "POST" and parts == ["sync"]:
+                return j(self, sync.run())
+            if method == "POST" and parts == ["sync", "login"]:
+                if not sync.configured():
+                    return j(self, {"error": "Cloud sync isn't set up in this build yet."}, 400)
+                url = sync.login_url(self.server.server_address[1])
+                webbrowser.open(url)
+                return j(self, {"url": url})
+            if method == "POST" and parts == ["sync", "logout"]:
+                sync.sign_out()
+                return j(self, sync.view())
         if method == "GET" and parts == ["models"]:
             key = engine.api_key()
             if not key:
@@ -441,6 +468,7 @@ def main():
     if not FROZEN:
         make_shortcuts()
     engine.start_scanner()
+    threading.Thread(target=sync.loop, daemon=True).start()
     port = free_port()
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)
     url = f"http://127.0.0.1:{port}/"

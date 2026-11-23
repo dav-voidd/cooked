@@ -784,6 +784,8 @@ def rescan(mid):
         raise PermissionError("This module is already mastered.")
     if m.get("imported"):
         raise PermissionError("Imported modules can't be rescanned. Import a new file instead.")
+    if m.get("_nosrc"):
+        raise PermissionError("This module was scanned on your other device. Rescan it there.")
     media = os.path.join(module_dir(m), "media")
     shutil.rmtree(media, ignore_errors=True)
     m.update(status="queued", error="", progress="Waiting in line...", questions=[], progress_q={}, notes=None)

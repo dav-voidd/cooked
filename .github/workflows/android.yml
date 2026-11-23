@@ -39,7 +39,9 @@ jobs:
         run: npm run web
 
       - name: Create Android project
-        run: npx cap add android
+        run: |
+          npx cap add android
+          node scripts/patch-android.js
 
       - name: App icon + splash screen
         run: npx @capacitor/assets generate --android --iconBackgroundColor "#1a120e" --iconBackgroundColorDark "#1a120e" --splashBackgroundColor "#110d0b" --splashBackgroundColorDark "#110d0b"

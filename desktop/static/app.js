@@ -592,10 +592,30 @@ async function badgesPage() {
 }
 
 /* ---------------- settings ---------------- */
+function syncCard(sv) {
+  if (!sv || !sv.configured) return "";
+  const when = sv.at ? new Date(sv.at * 1000).toLocaleString([], {dateStyle: "medium", timeStyle: "short"}) : "not yet";
+  return `<div class="card" style="max-width:900px;margin:0 0 16px"><div class="row between"><b style="font-size:18px">☁️ Sync with your phone</b>
+      ${sv.signed_in ? `<span class="tag ok">signed in</span>` : `<span class="tag">off</span>`}</div>
+    ${sv.signed_in
+      ? `<p class="muted small" style="margin:8px 0 12px">Signed in as <b>${esc(sv.email)}</b>. Subjects, progress, XP and your Gemini key sync automatically every minute.<br>Last sync: ${esc(when)}${sv.error ? ` · <span style="color:var(--bad)">${esc(sv.error)}</span>` : ""}</p>
+         <div class="row"><button class="btn sm fire" id="syncNow">${sv.busy ? `<span class="spin"></span> Syncing` : "🔄 Sync now"}</button><button class="btn sm ghost" id="syncOut">Sign out</button></div>`
+      : `<p class="muted small" style="margin:8px 0 12px">Sign in with the same Google account here and in the phone app to share your subjects and progress.</p>
+         <button class="btn fire" id="syncIn">Sign in with Google</button>`}</div>`;
+}
+function wireSync(again) {
+  if ($("#syncIn")) $("#syncIn").onclick = async () => { try { await api("sync/login", {}); toast("Finish signing in in your browser, then come back here.", "gold", 9000);
+    let n = 0; const t = setInterval(async () => { n++; const r = await api("sync").catch(() => null); if (r?.signed_in || n > 60) { clearInterval(t); if (r?.signed_in) { toast(`☁️ Signed in as ${esc(r.email)}`, "gold"); again(); } } }, 3000);
+  } catch (e) { fail(e); } };
+  if ($("#syncNow")) $("#syncNow").onclick = async () => { const b = $("#syncNow"); b.innerHTML = `<span class="spin"></span> Syncing`;
+    try { const r = await api("sync", {}); r.error ? toast("⚠️ " + esc(r.error), "err", 6500) : toast("☁️ Synced ✓"); again(); } catch (e) { fail(e); } };
+  if ($("#syncOut")) $("#syncOut").onclick = async () => { await api("sync/logout", {}); toast("Signed out. Your data stays on this PC."); again(); };
+}
 async function settingsPage() {
   const s = await refreshState(), st = s.settings, cl = st.claude;
   const isC = st.provider === "claude";
   view.innerHTML = `<h1 style="font-size:36px;margin-bottom:6px">Settings</h1><div class="muted" style="margin-bottom:18px">Choose who scans your modules.</div>
+  ${syncCard(s.sync)}
   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));max-width:900px">
     <div class="card prov ${isC ? "on" : ""}" data-p="claude">
       <div class="row between"><h3 style="font-size:22px">🟠 Claude Pro</h3>${isC ? `<span class="tag ok">in use</span>` : ""}</div>
@@ -635,6 +655,7 @@ async function settingsPage() {
       <option value="hardcore" ${st.strict === "hardcore" ? "selected" : ""}>💀 Hardcore: 3 in a row · a miss resets to 0</option>
     </select></div>
   <label class="sw" style="margin-top:20px"><input type="checkbox" id="judge" ${st.ai_judge ? "checked" : ""}> Let AI accept correct synonyms in identification (strict)</label>`;
+  wireSync(settingsPage);
   const setP = async p => { await api("settings", {provider: p}); toast(p === "claude" ? "Using Claude Pro for scanning ✓" : "Using Gemini for scanning ✓", "gold"); settingsPage(); };
   if ($("#useC")) $("#useC").onclick = () => setP("claude");
   if ($("#useG")) $("#useG").onclick = () => setP("gemini");

@@ -37,6 +37,7 @@ Free. No ads. Your notes and progress stay on your device.
 | ⚡ **Boost** | Drills your 15 weakest questions until they stick |
 | 🏆 **Rewards** | XP, combos, ranks (Raw → Legendary Chef), daily streaks, 15 badges |
 | ⏸️ **Resume anywhere** | Switch tabs or close the app and pick up on the same question |
+| ☁️ **Sync PC ↔ phone** | Sign in with Google on both and your subjects, progress and XP follow you |
 | ✈️ **Works offline** | Scan once, study anywhere. Only scanning and essay grading need internet |
 
 Built on the two study methods with the strongest research behind them: **practice testing** and **spaced practice** (Dunlosky et al., 2013), combined as *successive relearning*.
@@ -103,9 +104,15 @@ So you can't pass by luck. 94% or lower is a fail. Missed questions come back un
 </details>
 
 <details>
+<summary>Can I use it on my PC and phone with the same progress?</summary>
+
+Yes. **Settings → ☁️ Sync → Sign in with Google** on both. Subjects, progress, XP and your Gemini key sync automatically every minute.
+</details>
+
+<details>
 <summary>Where is my data?</summary>
 
-Only on your device. On Windows it's in `%LOCALAPPDATA%\Cooked`. Only the module you scan is sent to the AI.
+On your device (on Windows: `%LOCALAPPDATA%\Cooked`). If you turn on sync, a copy is kept in your own private cloud space that only your Google account can open. Only the module you scan is sent to the AI.
 </details>
 
 ## 🧱 Built with
