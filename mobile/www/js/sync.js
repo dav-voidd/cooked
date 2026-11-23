@@ -1,6 +1,6 @@
 /* Cooked cloud sync (phone side): Login with Google via the hosted login page + Firestore REST.
    Same layout and rules as desktop/sync.py so the PC and phone stay in step. */
-const FIREBASE = {apiKey: "__FIREBASE_API_KEY__", projectId: "__FIREBASE_PROJECT_ID__"};
+const FIREBASE = {apiKey: "AIzaSyB1duFrfcWiYcUIPT74ClLsYSvz3EluKqY", projectId: "cooked-74675"};
 const LOGIN_PAGE = "https://dav-voidd.github.io/cooked/login.html";
 const X = window.LocalAPI._x;
 const SETTINGS_KEYS = ["api_key", "strict", "ai_judge"];

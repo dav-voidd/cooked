@@ -11,7 +11,7 @@ import base64, copy, hashlib, json, os, secrets, threading, time, urllib.error, 
 
 import engine
 
-FIREBASE = {"apiKey": "__FIREBASE_API_KEY__", "projectId": "__FIREBASE_PROJECT_ID__"}
+FIREBASE = {"apiKey": "AIzaSyB1duFrfcWiYcUIPT74ClLsYSvz3EluKqY", "projectId": "cooked-74675"}
 LOGIN_PAGE = "https://dav-voidd.github.io/cooked/login.html"
 FS = "https://firestore.googleapis.com/v1/projects/{p}/databases/(default)/documents"
 SETTINGS_KEYS = ("api_key", "strict", "ai_judge")
