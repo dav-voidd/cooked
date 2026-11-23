@@ -1,0 +1,9 @@
+{
+  "appId": "com.davvoid.cooked",
+  "appName": "Cooked",
+  "webDir": "www",
+  "backgroundColor": "#110d0b",
+  "android": {
+    "adjustMarginsForEdgeToEdge": "force"
+  }
+}

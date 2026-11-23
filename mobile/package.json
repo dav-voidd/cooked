@@ -1,0 +1,20 @@
+{
+  "name": "cooked-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cooked: active recall that gets you exam-ready (Android app)",
+  "scripts": {
+    "web": "node scripts/copy-libs.js",
+    "android:prepare": "npm run web && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "jszip": "^3.10.1",
+    "pdfjs-dist": "3.11.174"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.0.0"
+  }
+}

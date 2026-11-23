@@ -1,0 +1,10 @@
+# your study data, keys and local builds never go to GitHub
+data/
+desktop/data/
+__pycache__/
+*.pyc
+node_modules/
+mobile/android/
+mobile/www/lib/pdf*.js
+mobile/Cooked.apk
+.DS_Store

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cooked</title>
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css?v=16">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#/" title="Home">
+    <img src="/logo.svg" alt="">
+    <span class="wordmark">Cooked<span class="dot">.</span></span>
+  </a>
+  <nav>
+    <a href="#/" data-nav="home">Kitchen</a>
+    <a href="#/badges" data-nav="badges">Rewards</a>
+    <a href="#/settings" data-nav="settings">Settings</a>
+  </nav>
+  <div class="chips" id="chips"></div>
+</header>
+<main id="view"></main>
+<div id="toasts"></div>
+<div id="modal" class="modal hidden"></div>
+<div id="lightbox" class="lightbox hidden"></div>
+<canvas id="confetti"></canvas>
+<script src="/app.js?v=16"></script>
+</body>
+</html>
