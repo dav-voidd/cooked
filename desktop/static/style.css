@@ -171,3 +171,7 @@ label.sw input{width:auto}
 .tutBtn{display:flex;align-items:center;gap:10px;width:100%;margin:10px 0 12px;padding:12px 14px;border-radius:14px;border:1.5px dashed #ff7a1a88;background:#ff7a1a14;color:var(--text);font-weight:700;text-align:left}
 .tutBtn .pl{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--grad);color:#1a0d05;font-size:14px;flex:none}
 .tutBtn small{display:block;color:var(--muted);font-weight:600}
+
+.updBanner{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#2a1a0e,#3a1a12);border:1.5px solid #ff7a1a88;border-radius:16px;padding:12px 44px 12px 18px;font-weight:600;box-shadow:0 12px 40px #000a;animation:pop .3s;white-space:nowrap}
+.updBanner b{color:var(--gold)}
+.updBanner .x{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);cursor:pointer;font-size:18px}

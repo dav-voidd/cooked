@@ -3,7 +3,7 @@ import base64, json, mimetypes, os, re, shutil, socket, subprocess, sys, threadi
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
-import engine, gemini, claude_cli, sync
+import engine, gemini, claude_cli, sync, updater
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 FROZEN = getattr(sys, "frozen", False)
@@ -105,7 +105,7 @@ class H(BaseHTTPRequestHandler):
                                          "claude_model": s.get("claude_model", "sonnet"), "strict": s.get("strict", "normal"),
                                          "gemini_speed": s.get("gemini_speed", "balanced"),
                                          "key_hint": ("..." + engine.api_key()[-4:]) if engine.api_key() else ""},
-                            "due_total": len(engine.due_reviews()), "active": engine.sessions_view(), "sync": sync.view()})
+                            "due_total": len(engine.due_reviews()), "active": engine.sessions_view(), "sync": sync.view(), "update": updater.view()})
         if method == "POST" and parts == ["settings"]:
             b = self.body()
             if "api_key" in b and b["api_key"].strip():
@@ -120,6 +120,17 @@ class H(BaseHTTPRequestHandler):
                     m["status"], m["error"] = "queued", ""
                     engine.SCAN_Q.put(m["id"])
             return j(self, {"ok": True})
+        if parts and parts[0] == "update":
+            if method == "GET":
+                return j(self, updater.view())
+            if parts == ["update", "check"]:
+                return j(self, updater.check())
+            if parts == ["update", "restart"]:
+                engine.save()
+                if not updater.install(relaunch=True):
+                    return j(self, {"error": "No update ready yet."}, 400)
+                threading.Timer(0.6, lambda: os._exit(0)).start()
+                return j(self, {"ok": True})
         if parts and parts[0] == "sync":
             if method == "GET" and parts == ["sync"]:
                 return j(self, sync.view())
@@ -469,6 +480,7 @@ def main():
         make_shortcuts()
     engine.start_scanner()
     threading.Thread(target=sync.loop, daemon=True).start()
+    threading.Thread(target=updater.loop, daemon=True).start()
     port = free_port()
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)
     url = f"http://127.0.0.1:{port}/"
@@ -494,6 +506,7 @@ def main():
             except TypeError:
                 webview.start()
             engine.save()
+            updater.install(relaunch=False)      # downloaded update? swap it in now that the window is closed
             return
         except Exception as e:
             print(f"Native window failed ({e}); using app-window fallback.")
@@ -506,6 +519,7 @@ def main():
     except KeyboardInterrupt:
         pass
     engine.save()
+    updater.install(relaunch=False)
 
 
 if __name__ == "__main__":

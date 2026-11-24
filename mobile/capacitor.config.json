@@ -5,5 +5,11 @@
   "backgroundColor": "#110d0b",
   "android": {
     "adjustMarginsForEdgeToEdge": "force"
+  },
+  "plugins": {
+    "CapacitorUpdater": {
+      "autoUpdate": false,
+      "statsUrl": ""
+    }
   }
 }

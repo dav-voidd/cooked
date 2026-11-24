@@ -30,7 +30,15 @@ function renderChips(p) {
       <span>Lv ${p.level} · ${esc(p.rank)}</span><div class="bar"><i style="width:${Math.round(100 * p.into / p.need)}%"></i></div>
     </div>`;
 }
-async function refreshState() { STATE = await api("state"); renderChips(STATE.profile); return STATE; }
+async function refreshState() { STATE = await api("state"); renderChips(STATE.profile); updBanner(STATE.update); return STATE; }
+function updBanner(u) {
+  if (!u || !u.ready || document.getElementById("updBanner") || sessionStorage.updHide) return;
+  const b = document.createElement("div"); b.id = "updBanner"; b.className = "updBanner";
+  b.innerHTML = `✨ <b>Cooked update ready</b> (build ${u.latest}). It installs when you close the app, or <button class="btn sm fire" id="updNow">Restart now</button><span class="x">✕</span>`;
+  b.querySelector(".x").onclick = () => { sessionStorage.updHide = 1; b.remove(); };
+  b.querySelector("#updNow").onclick = async () => { b.innerHTML = "Restarting Cooked..."; try { await api("update/restart", {}); } catch (e) { fail(e); } };
+  document.body.appendChild(b);
+}
 
 /* ---------------- router ---------------- */
 window.addEventListener("hashchange", route);
@@ -624,6 +632,7 @@ async function settingsPage() {
   const isC = st.provider === "claude";
   view.innerHTML = `<h1 style="font-size:36px;margin-bottom:6px">Settings</h1><div class="muted" style="margin-bottom:18px">Choose who scans your modules.</div>
   ${syncCard(s.sync)}
+  ${STATE?.update?.frozen ? `<div class="row between muted small" style="max-width:900px;margin:-6px 0 16px"><span>Cooked build ${STATE.update.build}${STATE.update.ready ? " · update ready" : ""} · updates install automatically</span><button class="btn sm ghost" id="updChk">Check for updates</button></div>` : ""}
   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));max-width:900px">
     <div class="card prov ${isC ? "on" : ""}" data-p="claude">
       <div class="row between"><h3 style="font-size:22px">🟠 Claude Pro</h3>${isC ? `<span class="tag ok">in use</span>` : ""}</div>
@@ -665,6 +674,9 @@ async function settingsPage() {
     </select></div>
   <label class="sw" style="margin-top:20px"><input type="checkbox" id="judge" ${st.ai_judge ? "checked" : ""}> Let AI accept correct synonyms in identification (strict)</label>`;
   wireSync(settingsPage);
+  if ($("#updChk")) $("#updChk").onclick = async () => { $("#updChk").innerHTML = `<span class="spin"></span> Checking`; const u = await api("update/check", {}).catch(() => null);
+    if (!u) return fail(new Error("Couldn't check for updates."));
+    toast(u.ready ? `✨ Update downloaded (build ${u.latest}). Restart to install.` : u.error ? "⚠️ " + esc(u.error) : `You're on the latest version (build ${u.build}).`, u.error ? "err" : "gold"); refreshState(); settingsPage(); };
   $("#tutBtn").onclick = () => showTutorial("/tutorial-pc.mp4", false);
   const setP = async p => { await api("settings", {provider: p}); toast(p === "claude" ? "Using Claude Pro for scanning ✓" : "Using Gemini for scanning ✓", "gold"); settingsPage(); };
   if ($("#useC")) $("#useC").onclick = () => setP("claude");

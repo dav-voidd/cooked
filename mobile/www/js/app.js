@@ -620,6 +620,7 @@ async function settingsPage() {
   const s = await refreshState(), st = s.settings;
   view.innerHTML = `<h1 style="font-size:32px;margin-bottom:14px">Settings</h1>
   ${syncCard(s.sync)}
+  <div class="row between muted small" style="margin:-4px 0 14px"><span id="verLine">Cooked build ${window.CookedUpdate?.version().build || "?"} · updates install automatically</span><button class="btn sm ghost" id="updChk">Check for updates</button></div>
   <div class="card">
     <div class="row between"><h3 style="font-size:20px">🔷 Gemini (free)</h3>${st.has_key ? `<span class="tag ok">key saved ${esc(st.key_hint)}</span>` : `<span class="tag critical">no key</span>`}</div>
     <p class="muted small">Get a free key at <b>aistudio.google.com/apikey</b> → "Create API key", then paste it here. It stays on your devices.</p>
@@ -646,6 +647,7 @@ async function settingsPage() {
     <p class="muted small">On the desktop app open the subject → <b>📤 Export</b>, send the file to your phone, then here: subject → <b>⬇️ Import</b>. No scanning needed.</p></div>
   <p class="dim small" style="text-align:center;margin-top:18px">Cooked mobile · built by dav</p>`;
   wireSync(settingsPage);
+  $("#updChk").onclick = () => window.CookedUpdate ? CookedUpdate.check() : toast("Updates work in the installed app.");
   $("#tutBtn").onclick = () => showTutorial("tutorial-phone.mp4", true);
   $("#eye").onclick = () => { const k = $("#key"); k.type = k.type === "password" ? "text" : "password"; };
   $("#gspeed").onchange = async () => { await api("settings", {gemini_speed: $("#gspeed").value}); toast("Saved ✓"); };

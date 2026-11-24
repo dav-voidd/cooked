@@ -12,6 +12,8 @@ permissions:
 jobs:
   apk:
     runs-on: ubuntu-latest
+    outputs:
+      native: ${{ steps.ver.outputs.native }}
     defaults:
       run:
         working-directory: mobile
@@ -38,10 +40,25 @@ jobs:
       - name: Bundle offline libraries
         run: npm run web
 
+      - name: Stamp version
+        id: ver
+        run: |
+          NATIVE=$(node -p "require('./package.json').nativeVersion")
+          echo "{\"build\": ${{ github.run_number }}, \"native\": $NATIVE}" > www/version.json
+          echo "native=$NATIVE" >> $GITHUB_OUTPUT
+          cat www/version.json
+
+      - name: Same signing key every build (so updates install over the old app)
+        env:
+          KEY: ${{ secrets.ANDROID_DEBUG_KEYSTORE }}
+        run: |
+          mkdir -p ~/.android
+          if [ -n "$KEY" ]; then echo "$KEY" | base64 -d > ~/.android/debug.keystore; echo "using saved signing key"; else echo "::warning::ANDROID_DEBUG_KEYSTORE secret not set: this APK can't update over older installs"; fi
+
       - name: Create Android project
         run: |
           npx cap add android
-          node scripts/patch-android.js
+          BUILD_NUMBER=${{ github.run_number }} node scripts/patch-android.js
 
       - name: App icon + splash screen
         run: npx @capacitor/assets generate --android --iconBackgroundColor "#1a120e" --iconBackgroundColorDark "#1a120e" --splashBackgroundColor "#110d0b" --splashBackgroundColorDark "#110d0b"
@@ -56,10 +73,15 @@ jobs:
           ./gradlew assembleDebug --no-daemon
           cp app/build/outputs/apk/debug/app-debug.apk ../Cooked.apk
 
+      - name: Live-update bundle
+        run: cd www && zip -qr ../www.zip . && cd .. && ls -l www.zip
+
       - uses: actions/upload-artifact@v4
         with:
           name: Cooked-apk
-          path: mobile/Cooked.apk
+          path: |
+            mobile/Cooked.apk
+            mobile/www.zip
 
   windows:
     runs-on: windows-latest
@@ -75,6 +97,7 @@ jobs:
 
       - name: Build Cooked.exe
         run: |
+          Set-Content -Path static/version.json -Value '{"build": ${{ github.run_number }}}'
           pip install pyinstaller pywebview
           pyinstaller --noconfirm --onefile --windowed --name Cooked --icon static/cooked.ico --add-data "static;static" --collect-all webview app.py
           Copy-Item dist/Cooked.exe ../Cooked.exe
@@ -103,7 +126,11 @@ jobs:
             - **Android:** `Cooked.apk` — open it on your phone to install (allow "Install unknown apps" if asked).
 
             Paste your free Gemini API key in **Settings** on first launch. Your study data stays on your device.
+            Already installed? Cooked updates itself.
+
+            <!-- native:${{ needs.apk.outputs.native }} -->
           files: |
             Cooked.exe
             Cooked.apk
+            www.zip
           make_latest: true
