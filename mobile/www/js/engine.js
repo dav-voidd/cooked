@@ -105,7 +105,7 @@ async function generateJSON(parts, schema, system, temperature = .4, log, timeou
         if (!(e instanceof GemErr)) throw e; last = e; const code = e.code; const msg = (e.message + JSON.stringify(e.details)).toLowerCase();
         if (code === 401 || code === 403 || (code === 400 && msg.includes("api key"))) {
           const k = DB.settings.api_key || "", why = (e.message.split(": ").slice(1).join(": ") || e.message).slice(0, 160);
-          throw new GemErr(`Google rejected the key ending "…${k.slice(-4)}" (${k.length} characters): ${why}. A full key starts with "AIza" and is 39 characters. On AI Studio tap your key, then "Copy key" (the shortened text in the list won't work).`, code); }
+          throw new GemErr(`Google rejected the key ending "…${k.slice(-4)}" (${k.length} characters): ${why}. On AI Studio tap your key, then "Copy key" (the shortened text in the list won't work).`, code); }
         if (code === 400 && think && msg.includes("think")) { GC.noThink.add(model); think = null; continue; }
         if (code === 400 || code === 404) break;
         if (code === 429) { const dead = msg.includes("limit: 0") || msg.includes("perday") || msg.includes("per day");
@@ -562,7 +562,7 @@ async function handle(method, path, body) {
   if (method === "POST" && P("settings")) {
     if (body.api_key && body.api_key.trim()) {
       const k = body.api_key.replace(/\s+/g, "").replace(/^["']|["']$/g, "").replace(/^.*key=/, "");
-      if (k.length < 30 || /[.…*]/.test(k)) throw new HttpErr(`That's only part of a key (${k.length} characters). On aistudio.google.com/apikey tap your key, then "Copy key", and paste the whole thing (starts with "AIza", 39 characters).`, 400);
+      if (k.length < 30 || /…|\*|\.\.\./.test(k)) throw new HttpErr(`That's only part of a key (${k.length} characters). On aistudio.google.com/apikey tap your key, then "Copy key", and paste the whole thing.`, 400);
       DB.settings.api_key = k; GC.names = null; GC.good = null; GC.bad = {}; }
     for (const k of ["model", "ai_judge", "strict", "gemini_speed"]) if (k in body) DB.settings[k] = body[k];
     for (const m of Object.values(DB.modules)) if (m.status === "error" && /API key/.test(m.error)) { m.status = "queued"; m.error = ""; queueScan(m.id); }
