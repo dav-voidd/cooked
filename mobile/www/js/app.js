@@ -608,6 +608,14 @@ function wireSync(again) {
 window.addEventListener("cooked-login", e => { toast(`☁️ Signed in as ${esc(e.detail || "")}. Syncing...`, "gold"); if (location.hash === "#/settings") settingsPage(); });
 window.addEventListener("cooked-synced", () => { const h = location.hash; if (h === "" || h === "#/" || h.startsWith("#/deck/") || h === "#/settings" || h === "#/badges") route(); });
 
+function showTutorial(src, vertical) {
+  const m = document.createElement("div"); m.className = "modal tut";
+  m.innerHTML = `<div class="tutBox${vertical ? " v" : ""}"><video src="${src}" autoplay muted playsinline loop controls></video>
+    <div class="row between" style="margin-top:12px"><span class="muted small">Then paste your key below and tap Save.</span><button class="btn fire sm" id="tutClose">Got it</button></div></div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.onclick = e => { if (e.target === m) close(); }; m.querySelector("#tutClose").onclick = close;
+}
 async function settingsPage() {
   const s = await refreshState(), st = s.settings;
   view.innerHTML = `<h1 style="font-size:32px;margin-bottom:14px">Settings</h1>
@@ -615,6 +623,7 @@ async function settingsPage() {
   <div class="card">
     <div class="row between"><h3 style="font-size:20px">🔷 Gemini (free)</h3>${st.has_key ? `<span class="tag ok">key saved ${esc(st.key_hint)}</span>` : `<span class="tag critical">no key</span>`}</div>
     <p class="muted small">Get a free key at <b>aistudio.google.com/apikey</b> → "Create API key", then paste it here. It stays on your devices.</p>
+    <button class="tutBtn" id="tutBtn" type="button"><span class="pl">▶</span><span>How to get a free key<small>15-second video · no card needed</small></span></button>
     <div class="row" style="gap:8px;flex-wrap:nowrap"><input id="key" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="flex:1" placeholder="${st.has_key ? "Paste a new key to replace" : "Paste your key here"}">
     <button class="btn" id="eye" type="button" title="Show key">👁</button></div>
     <div style="margin-top:12px"><b class="small">Scan speed</b>
@@ -637,6 +646,7 @@ async function settingsPage() {
     <p class="muted small">On the desktop app open the subject → <b>📤 Export</b>, send the file to your phone, then here: subject → <b>⬇️ Import</b>. No scanning needed.</p></div>
   <p class="dim small" style="text-align:center;margin-top:18px">Cooked mobile · built by dav</p>`;
   wireSync(settingsPage);
+  $("#tutBtn").onclick = () => showTutorial("tutorial-phone.mp4", true);
   $("#eye").onclick = () => { const k = $("#key"); k.type = k.type === "password" ? "text" : "password"; };
   $("#gspeed").onchange = async () => { await api("settings", {gemini_speed: $("#gspeed").value}); toast("Saved ✓"); };
   $("#strict").onchange = async () => { await api("settings", {strict: $("#strict").value}); toast("Saved ✓"); };

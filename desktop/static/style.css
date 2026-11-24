@@ -164,3 +164,10 @@ label.sw input{width:auto}
 .sring .fg{stroke:url(#none);stroke:#ff7a1a;stroke-linecap:round;transition:stroke-dashoffset 1s linear;filter:drop-shadow(0 0 6px #ff7a1a88)}
 .sring b{position:absolute;inset:0;display:grid;place-items:center;font:800 14px "Bricolage Grotesque",Inter,"Segoe UI",sans-serif}
 .stext{font-weight:700;color:#ffb070}
+
+.modal.tut .tutBox{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px;width:min(900px,calc(100% - 32px));animation:pop .3s}
+.modal.tut .tutBox.v{width:min(380px,calc(100% - 32px))}
+.modal.tut video{display:block;width:100%;max-height:78vh;border-radius:12px;background:#000}
+.tutBtn{display:flex;align-items:center;gap:10px;width:100%;margin:10px 0 12px;padding:12px 14px;border-radius:14px;border:1.5px dashed #ff7a1a88;background:#ff7a1a14;color:var(--text);font-weight:700;text-align:left}
+.tutBtn .pl{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--grad);color:#1a0d05;font-size:14px;flex:none}
+.tutBtn small{display:block;color:var(--muted);font-weight:600}

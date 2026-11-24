@@ -124,12 +124,27 @@ async function generateJSON(parts, schema, system, temperature = .4, log, timeou
 const IMG_MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"};
 const extOf = n => (n.match(/\.[^.]+$/) || [""])[0].toLowerCase();
 const numOf = s => { const m = s.match(/\d+/g); return m ? +m[m.length - 1] : 0; };
+/* shrink big pictures before sending them to Gemini (phone uploads + the 20 MB request limit) */
+async function shrinkImg(data, mime, maxSide = 1600) {
+  if (data.length < 300000 || typeof createImageBitmap !== "function") return [data, mime];
+  try {
+    const bmp = await createImageBitmap(new Blob([data], {type: mime}));
+    const k = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+    const cv = document.createElement("canvas"); cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
+    const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(bmp, 0, 0, cv.width, cv.height);
+    const out = await new Promise(r => cv.toBlob(r, "image/jpeg", .82));
+    if (!out || out.size >= data.length) return [data, mime];
+    return [new Uint8Array(await out.arrayBuffer()), "image/jpeg"];
+  } catch { return [data, mime]; }
+}
 async function extract(mid, filename, blob, log) {
   const ext = extOf(filename);
+  if (ext === ".pdf" && blob.size > 14e6) throw new HttpErr(`This PDF is ${(blob.size / 1e6).toFixed(0)} MB, too big to scan on a phone (max 14 MB). Scan it on the PC app, or split it into smaller PDFs.`);
   if (ext === ".pdf") return {kind: "pdf", parts: [{inline_data: {mime_type: "application/pdf", data: await b64(blob)}}], visuals: [], pages: 0};
   if (ext === ".ppt" || ext === ".doc") throw new HttpErr(`Old ${ext} isn't supported. Save it as ${ext}x or PDF.`);
-  if (IMG_MIME[ext]) { await fput(`${mid}/media/img1${ext}`, blob);
-    return {kind: "image", parts: [{text: '[VISUAL ref="img:img1' + ext + '"]'}, {inline_data: {mime_type: IMG_MIME[ext], data: await b64(blob)}}], visuals: [{ref: "img:img1" + ext}], pages: 1}; }
+  if (IMG_MIME[ext]) { const [d0, mt] = await shrinkImg(new Uint8Array(await blob.arrayBuffer()), IMG_MIME[ext]); const e2 = mt === "image/jpeg" ? ".jpg" : ext;
+    const bl = new Blob([d0], {type: mt}); await fput(`${mid}/media/img1${e2}`, bl);
+    return {kind: "image", parts: [{text: '[VISUAL ref="img:img1' + e2 + '"]'}, {inline_data: {mime_type: mt, data: await b64(bl)}}], visuals: [{ref: "img:img1" + e2}], pages: 1}; }
   if ([".txt", ".md", ".csv", ".html", ".htm"].includes(ext)) { let t = await blob.text(); if (ext.startsWith(".htm")) t = t.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, " ");
     return {kind: "text", parts: [{text: t}], visuals: [], pages: 1}; }
   if (![".pptx", ".ppsx", ".docx"].includes(ext)) throw new HttpErr(`Unsupported file type ${ext}. Use PDF, PPTX, DOCX, images or TXT.`);
@@ -143,12 +158,14 @@ async function extract(mid, filename, blob, log) {
   const paras = (doc, ns, ptag, ttag) => [...doc.getElementsByTagNameNS(ns, ptag)].map(p => [...p.getElementsByTagNameNS(ns, ttag)].map(t => t.textContent).join("").trim()).filter(Boolean);
   const A = "http://schemas.openxmlformats.org/drawingml/2006/main", R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships", W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
   const addImg = async (path, where) => {
-    const e = extOf(path); if (!IMG_MIME[e] || !zip.file(path)) return; const data = await zip.file(path).async("uint8array");
-    if (data.length < 6144 || visuals.length >= 40 || total + data.length > 14e6) return;
-    let h = 0; for (let i = 0; i < data.length; i += 97) h = (h * 31 + data[i]) >>> 0; const hk = h + ":" + data.length; if (seen.has(hk)) return; seen.add(hk);
+    let e = extOf(path); if (!IMG_MIME[e] || !zip.file(path)) return; const raw = await zip.file(path).async("uint8array");
+    if (raw.length < 6144 || visuals.length >= 40) return;
+    let h = 0; for (let i = 0; i < raw.length; i += 97) h = (h * 31 + raw[i]) >>> 0; const hk = h + ":" + raw.length; if (seen.has(hk)) return; seen.add(hk);
+    const [data, mt] = await shrinkImg(raw, IMG_MIME[e]); if (mt === "image/jpeg") e = ".jpg";
+    if (total + data.length > 11e6) return;
     total += data.length; const name = `img${visuals.length + 1}_${h.toString(16)}${e}`;
-    const bl = new Blob([data], {type: IMG_MIME[e]}); await fput(`${mid}/media/${name}`, bl);
-    visuals.push({ref: "img:" + name, where}); parts.push({text: `[VISUAL ref="img:${name}" located at ${where}]`}, {inline_data: {mime_type: IMG_MIME[e], data: await b64(bl)}});
+    const bl = new Blob([data], {type: mt}); await fput(`${mid}/media/${name}`, bl);
+    visuals.push({ref: "img:" + name, where}); parts.push({text: `[VISUAL ref="img:${name}" located at ${where}]`}, {inline_data: {mime_type: mt, data: await b64(bl)}});
   };
   let pages = 1;
   if (ext === ".docx") {

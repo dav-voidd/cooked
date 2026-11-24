@@ -1,5 +1,5 @@
 """Cooked core: storage, AI scanning, grading, mastery gating, SRS and rewards."""
-import difflib, json, os, queue, random, re, shutil, threading, time, traceback, unicodedata, uuid
+import base64, difflib, json, os, queue, random, re, shutil, threading, time, traceback, unicodedata, uuid
 from datetime import date, datetime, timedelta
 
 import gemini, claude_cli
@@ -398,6 +398,17 @@ def _scan_gemini(m):
     if blob:
         log("Uploading PDF to Gemini...")
         parts = [gemini.blob_part(key, blob[0], blob[1], m["filename"])]
+    inline = sum(len(p["inline_data"]["data"]) for p in parts if "inline_data" in p)
+    if inline > 8_000_000:          # big slide decks: send the pictures through Gemini's file upload instead of one huge request
+        log("Uploading slide images to Gemini...")
+        for i, p in enumerate(parts):
+            if "inline_data" in p and len(p["inline_data"]["data"]) > 150_000:
+                try:
+                    raw = base64.b64decode(p["inline_data"]["data"])
+                    parts[i] = {"file_data": {"mime_type": p["inline_data"]["mime_type"],
+                                              "file_uri": gemini.upload_file(key, raw, p["inline_data"]["mime_type"], f"img{i}")}}
+                except gemini.GeminiError:
+                    pass
     m["kind"], m["visuals"] = kind, visuals
     model = d["settings"].get("model", "auto")
     if model == "auto" and d["settings"].get("gemini_speed") == "fast":

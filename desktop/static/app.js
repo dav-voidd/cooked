@@ -611,6 +611,14 @@ function wireSync(again) {
     try { const r = await api("sync", {}); r.error ? toast("⚠️ " + esc(r.error), "err", 6500) : toast("☁️ Synced ✓"); again(); } catch (e) { fail(e); } };
   if ($("#syncOut")) $("#syncOut").onclick = async () => { await api("sync/logout", {}); toast("Signed out. Your data stays on this PC."); again(); };
 }
+function showTutorial(src, vertical) {
+  const m = document.createElement("div"); m.className = "modal tut";
+  m.innerHTML = `<div class="tutBox${vertical ? " v" : ""}"><video src="${src}" autoplay muted playsinline loop controls></video>
+    <div class="row between" style="margin-top:12px"><span class="muted small">Then paste your key below and tap Save.</span><button class="btn fire sm" id="tutClose">Got it</button></div></div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.onclick = e => { if (e.target === m) close(); }; m.querySelector("#tutClose").onclick = close;
+}
 async function settingsPage() {
   const s = await refreshState(), st = s.settings, cl = st.claude;
   const isC = st.provider === "claude";
@@ -635,6 +643,7 @@ async function settingsPage() {
     <div class="card prov ${!isC ? "on" : ""}" data-p="gemini">
       <div class="row between"><h3 style="font-size:22px">🔷 Gemini (free)</h3>${!isC ? `<span class="tag ok">in use</span>` : ""}</div>
       <p class="muted small">Free key from <b>aistudio.google.com/apikey</b>. ${isC ? "Optional: if added, it's used for quick essay/answer checks (faster)." : ""}</p>
+      <button class="tutBtn" id="tutBtn" type="button"><span class="pl">▶</span><span>How to get a free key<small>15-second video · no card needed</small></span></button>
       <div style="margin:8px 0">${st.has_key ? `<span class="tag ok">key saved ${esc(st.key_hint)}</span>` : `<span class="tag">no key</span>`}</div>
       <input id="key" type="password" placeholder="${st.has_key ? "Paste a new key to replace" : "Paste your key here"}">
       <div style="margin-top:10px"><b class="small">Scan speed</b>
@@ -656,6 +665,7 @@ async function settingsPage() {
     </select></div>
   <label class="sw" style="margin-top:20px"><input type="checkbox" id="judge" ${st.ai_judge ? "checked" : ""}> Let AI accept correct synonyms in identification (strict)</label>`;
   wireSync(settingsPage);
+  $("#tutBtn").onclick = () => showTutorial("/tutorial-pc.mp4", false);
   const setP = async p => { await api("settings", {provider: p}); toast(p === "claude" ? "Using Claude Pro for scanning ✓" : "Using Gemini for scanning ✓", "gold"); settingsPage(); };
   if ($("#useC")) $("#useC").onclick = () => setP("claude");
   if ($("#useG")) $("#useG").onclick = () => setP("gemini");
